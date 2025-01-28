@@ -5,17 +5,20 @@ import PackageDescription
 
 let package = Package(
     name: "SwiftPyConsole",
+    platforms: [.macOS(.v14), .iOS(.v16)],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
-        .library(
-            name: "SwiftPyConsole",
-            targets: ["SwiftPyConsole"]),
+        .library(name: "SwiftPyConsole",
+                 targets: ["SwiftPyConsole"]),
+    ],
+    dependencies: [
+        .package(url: "https://github.com/felfoldy/SwiftPy", from: "0.2.0"),
+        .package(url: "https://github.com/felfoldy/DebugTools", from: "0.4.0")
     ],
     targets: [
-        // Targets are the basic building blocks of a package, defining a module or a test suite.
-        // Targets can depend on other targets in this package and products from dependencies.
-        .target(
-            name: "SwiftPyConsole"),
+        .target(name: "SwiftPyConsole",
+                dependencies: ["SwiftPy",
+                               "DebugTools"]),
         .testTarget(
             name: "SwiftPyConsoleTests",
             dependencies: ["SwiftPyConsole"]

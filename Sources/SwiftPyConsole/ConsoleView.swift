@@ -1,0 +1,140 @@
+//
+//  ConsoleView.swift
+//  SwiftPyConsole
+//
+//  Created by Tibor Felföldy on 2025-01-28.
+//
+
+import DebugTools
+import SwiftUI
+import SwiftPy
+
+@available(macOS 15.0, iOS 17.0, *)
+public struct PythonConsoleView: View {
+    @StateObject private var input = InputProcessor()
+    @ObservedObject private var store = SwiftPyConsole.store
+
+    public init() {
+        SwiftPyConsole.initialize()
+    }
+
+    public var body: some View {
+        ConsoleView(store: store) { log in
+            if let outLog = log as? PythonOutputLog {
+                LogContainerView(tint: outLog.tint) {
+                    Text(outLog.message)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+        }
+        .textSelection(.enabled)
+        .safeAreaInset(edge: .bottom) {
+            VStack(alignment: .leading, spacing: 0) {
+                if !input.completions.isEmpty {
+                    ScrollViewReader { proxy in
+                        ScrollView(.horizontal) {
+                            HStack {
+                                ForEach(input.completions, id: \.self) { completion in
+                                    let text = completion == "\t" ? "tab" : completion
+
+                                    Group {
+                                        if completion == input.selectedCompletion {
+                                            Button(text) {
+                                                input.setCompletion(completion)
+                                            }
+                                            .buttonStyle(.borderedProminent)
+                                        } else {
+                                            Button(text) {
+                                                input.setCompletion(completion)
+                                            }
+                                            .buttonStyle(.bordered)
+                                        }
+                                    }
+                                    .id(completion)
+                                }
+                            }
+                            .padding(8)
+                        }
+                        .onChange(of: input.selectedCompletion) { _, newValue in
+                            if let newValue {
+                                withAnimation {
+                                    proxy.scrollTo(newValue)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if !input.replBuffer.isEmpty {
+                    VStack(alignment: .leading) {
+                        ForEach(input.replBuffer, id: \.self) { line in
+                            Text(line)
+                        }
+                    }
+                    .padding(.horizontal, 8)
+                }
+                                
+                TextField(">>>", text: $input.input)
+                    .autocorrectionDisabled()
+                    #if os(iOS)
+                    .textInputAutocapitalization(.never)
+                    .keyboardType(.asciiCapable)
+                    #endif
+                    .monospaced()
+                    .onSubmit {
+                        input.submit()
+                    }
+                    .padding([.horizontal, .bottom], 8)
+                    .onKeyPress(.tab) {
+                        if let selectedCompletion = input.selectedCompletion {
+                            Task { @MainActor in
+                                input.setCompletion(selectedCompletion)
+                            }
+                            return .handled
+                        }
+                        return .ignored
+                    }
+                    .onKeyPress(.upArrow) {
+                        if let completion = input.selectedCompletion,
+                           let i = input.completions.firstIndex(of: completion) {
+                            var nextIndex = (i - 1)
+                            if nextIndex < 0 {
+                                nextIndex = input.completions.count - 1
+                            }
+                            let next = input.completions[nextIndex % input.completions.count]
+                            Task { @MainActor in
+                                input.selectedCompletion = next
+                            }
+                            return .handled
+                        }
+                        return .ignored
+                    }
+                    .onKeyPress(.downArrow) {
+                        if let completion = input.selectedCompletion,
+                           let i = input.completions.firstIndex(of: completion) {
+                            let next = input.completions[(i + 1) % input.completions.count]
+                            Task { @MainActor in
+                                input.selectedCompletion = next
+                            }
+                            return .handled
+                        }
+                        return .ignored
+                    }
+            }
+            .background(.thinMaterial)
+        }
+        .fontDesign(.monospaced)
+    }
+}
+
+struct PythonInputView: View {
+    var body: some View {
+        Text("Hello, World!")
+    }
+}
+
+#Preview {
+    if #available(macOS 15.0, iOS 17.0, *) {
+        PythonConsoleView()
+    }
+}
