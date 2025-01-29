@@ -85,40 +85,37 @@ public struct PythonConsoleView: View {
                         input.submit()
                     }
                     .padding([.horizontal, .bottom], 8)
+                    .onKeyPress(.return) {
+                        if let completion = input.selectedCompletion,
+                           input.completions.count > 1 {
+                            Task {
+                                input.setCompletion(completion)
+                            }
+                            return .handled
+                        }
+                        return .ignored
+                    }
                     .onKeyPress(.tab) {
-                        if let selectedCompletion = input.selectedCompletion {
-                            Task { @MainActor in
-                                input.setCompletion(selectedCompletion)
+                        if let completion = input.selectedCompletion {
+                            if input.completions.count == 1 {
+                                Task { @MainActor in
+                                    input.setCompletion(completion)
+                                }
+                                return .handled
+                            }
+                            if let i = input.completions.firstIndex(of: completion) {
+                                let next = input.completions[(i + 1) % input.completions.count]
+                                Task { @MainActor in
+                                    input.selectedCompletion = next
+                                }
                             }
                             return .handled
                         }
-                        return .ignored
-                    }
-                    .onKeyPress(.upArrow) {
-                        if let completion = input.selectedCompletion,
-                           let i = input.completions.firstIndex(of: completion) {
-                            var nextIndex = (i - 1)
-                            if nextIndex < 0 {
-                                nextIndex = input.completions.count - 1
-                            }
-                            let next = input.completions[nextIndex % input.completions.count]
-                            Task { @MainActor in
-                                input.selectedCompletion = next
-                            }
-                            return .handled
+
+                        Task {
+                            input.selectedCompletion = input.completions.first
                         }
-                        return .ignored
-                    }
-                    .onKeyPress(.downArrow) {
-                        if let completion = input.selectedCompletion,
-                           let i = input.completions.firstIndex(of: completion) {
-                            let next = input.completions[(i + 1) % input.completions.count]
-                            Task { @MainActor in
-                                input.selectedCompletion = next
-                            }
-                            return .handled
-                        }
-                        return .ignored
+                        return .handled
                     }
             }
             .background(.thinMaterial)

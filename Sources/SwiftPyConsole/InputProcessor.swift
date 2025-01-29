@@ -31,7 +31,9 @@ final class InputProcessor: ObservableObject {
             .assign(to: &$completions)
         
         $completions
-            .compactMap(\.first)
+            .map {
+                $0.count == 1 ? $0.first : nil
+            }
             .assign(to: &$selectedCompletion)
     }
     
