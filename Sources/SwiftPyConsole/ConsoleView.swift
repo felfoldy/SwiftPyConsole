@@ -9,7 +9,7 @@ import DebugTools
 import SwiftUI
 import SwiftPy
 
-@available(macOS 15.0, iOS 17.0, *)
+@available(macOS 15.0, *)
 public struct PythonConsoleView: View {
     @StateObject private var input = InputProcessor()
     @ObservedObject private var store = SwiftPyConsole.store
@@ -25,6 +25,10 @@ public struct PythonConsoleView: View {
                     Text(outLog.message)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
+            }
+            
+            if let inputLog = log as? PythonInputLog {
+                PythonInputView(log: inputLog)
             }
         }
         .textSelection(.enabled)
@@ -73,8 +77,8 @@ public struct PythonConsoleView: View {
                     }
                     .padding(.horizontal, 8)
                 }
-                                
-                TextField(">>>", text: $input.input)
+         
+                TextField(">>>", text: $input.text)
                     .autocorrectionDisabled()
                     #if os(iOS)
                     .textInputAutocapitalization(.never)
@@ -82,7 +86,10 @@ public struct PythonConsoleView: View {
                     #endif
                     .monospaced()
                     .onSubmit {
-                        input.submit()
+                        let date = Date.now
+                        if let (result, time) = input.submit() {
+                            store.input(result, date: date, time: time)
+                        }
                     }
                     .padding([.horizontal, .bottom], 8)
                     .onKeyPress(.return) {
@@ -124,14 +131,8 @@ public struct PythonConsoleView: View {
     }
 }
 
-struct PythonInputView: View {
-    var body: some View {
-        Text("Hello, World!")
-    }
-}
-
 #Preview {
-    if #available(macOS 15.0, iOS 17.0, *) {
+    if #available(macOS 15.0, *) {
         PythonConsoleView()
     }
 }

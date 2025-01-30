@@ -10,13 +10,13 @@ import SwiftPy
 
 @MainActor
 final class InputProcessor: ObservableObject {
-    @Published var input: String = ""
+    @Published var text: String = ""
     @Published var selectedCompletion: String?
     @Published private(set) var completions: [String] = []
     @Published private(set) var replBuffer: [String] = []
     
     init() {
-        $input
+        $text
             .debounce(for: .seconds(0.2), scheduler: RunLoop.main)
             .removeDuplicates()
             .map { text -> [String] in
@@ -38,15 +38,28 @@ final class InputProcessor: ObservableObject {
     }
     
     func setCompletion(_ completion: String) {
-        let lastComponent = input.lastComponent
-        input = input.dropLast(lastComponent.count) + completion
+        let lastComponent = text.lastComponent
+        text = text.dropLast(lastComponent.count) + completion
     }
     
-    func submit() {
-        Interpreter.input(input)
-        input = ""
+    func submit() -> (String, UInt64)? {
+        let executedText = (replBuffer + [text])
+            .joined(separator: "\n")
+
+        let startTime = DispatchTime.now()
+        Interpreter.input(text)
+        let endTime = DispatchTime.now()
+
+        let nanoTime = endTime.uptimeNanoseconds - startTime.uptimeNanoseconds
+        
+        text = ""
         completions = []
         replBuffer = Interpreter.shared.replLines
+        
+        if replBuffer.isEmpty {
+            return (executedText, nanoTime)
+        }
+        return nil
     }
 }
 

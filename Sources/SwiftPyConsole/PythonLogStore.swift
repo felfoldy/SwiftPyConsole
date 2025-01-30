@@ -34,7 +34,9 @@ public final class PythonLogStore: LogStore, SwiftPy.OutputStream {
         
         // Clear console.
         Interpreter.main.bind(#def("clear") {
-            self.logs.removeAll()
+            DispatchQueue.main.async {
+                self.logs.removeAll()
+            }
         })
     }
     
@@ -48,6 +50,15 @@ public final class PythonLogStore: LogStore, SwiftPy.OutputStream {
         logs.append(
             PythonOutputLog(message: str, tint: .red)
         )
+    }
+    
+    public func input(_ str: String, date: Date, time: UInt64) {
+        logs.append(
+            PythonInputLog(id: UUID(), input: str, date: date, executionTime: time)
+        )
+        logs = logs
+            .compactMap { $0 as? (any SortableLog) }
+            .sorted { $0.date < $1.date }
     }
 }
 

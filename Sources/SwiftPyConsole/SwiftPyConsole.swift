@@ -12,6 +12,7 @@ public final class SwiftPyConsole {
     public static func initialize() {
         DebugTools.initialize(store: store)
         
+        #if os(iOS)
         DebugTools.shakePresentedConsole = {
             let view = GeometryReader { proxy in
                 let isPresented = proxy.size.height > 44
@@ -36,5 +37,6 @@ public final class SwiftPyConsole {
             
             return ConsoleViewController(base: UIHostingController(rootView: view))
         }
+        #endif
     }
 }
