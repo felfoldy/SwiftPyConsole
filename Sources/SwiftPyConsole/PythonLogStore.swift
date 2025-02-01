@@ -14,7 +14,7 @@ import OSLog
 struct PythonOutputLog: SortableLog, Hashable {
     let id = UUID().uuidString
     let date = Date()
-    let message: String
+    var message: String
     let tint: Color
     
     init(message: String, tint: Color) {
@@ -23,7 +23,7 @@ struct PythonOutputLog: SortableLog, Hashable {
     }
 }
 
-public final class PythonLogStore: LogStore, SwiftPy.OutputStream {
+public final class PythonLogStore: LogStore, IOStream {
     init() {
         super.init(logFilter: .none)
         // Set log destination.
@@ -40,25 +40,39 @@ public final class PythonLogStore: LogStore, SwiftPy.OutputStream {
         })
     }
     
+    public func input(_ str: String) {
+        if let last = logs.last as? PythonInputLog,
+           last.executionTime == nil {
+            last.input += "\n" + str
+        } else {
+            logs.append(PythonInputLog(input: str))
+        }
+    }
+    
+    public func executionTime(_ time: UInt64) {
+        if let last = logs.last(where: { $0 is PythonInputLog }),
+           let lastInput = last as? PythonInputLog,
+           lastInput.executionTime == nil {
+            lastInput.executionTime = time
+        }
+    }
+    
     public func stdout(_ str: String) {
-        logs.append(
-            PythonOutputLog(message: str, tint: .cyan)
-        )
+        if var last = logs.last as? PythonOutputLog, last.tint == .cyan {
+            last.message += "\n" + str
+            logs.removeLast()
+            logs.append(last)
+        } else {
+            logs.append(
+                PythonOutputLog(message: str, tint: .cyan)
+            )
+        }
     }
     
     public func stderr(_ str: String) {
         logs.append(
             PythonOutputLog(message: str, tint: .red)
         )
-    }
-    
-    public func input(_ str: String, date: Date, time: UInt64) {
-        logs.append(
-            PythonInputLog(id: UUID(), input: str, date: date, executionTime: time)
-        )
-        logs = logs
-            .compactMap { $0 as? (any SortableLog) }
-            .sorted { $0.date < $1.date }
     }
 }
 

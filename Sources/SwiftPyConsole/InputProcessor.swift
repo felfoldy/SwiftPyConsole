@@ -42,24 +42,11 @@ final class InputProcessor: ObservableObject {
         text = text.dropLast(lastComponent.count) + completion
     }
     
-    func submit() -> (String, UInt64)? {
-        let executedText = (replBuffer + [text])
-            .joined(separator: "\n")
-
-        let startTime = DispatchTime.now()
+    func submit() {
         Interpreter.input(text)
-        let endTime = DispatchTime.now()
 
-        let nanoTime = endTime.uptimeNanoseconds - startTime.uptimeNanoseconds
-        
         text = ""
         completions = []
-        replBuffer = Interpreter.shared.replLines
-        
-        if replBuffer.isEmpty {
-            return (executedText, nanoTime)
-        }
-        return nil
     }
 }
 

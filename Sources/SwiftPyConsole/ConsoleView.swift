@@ -35,47 +35,7 @@ public struct PythonConsoleView: View {
         .safeAreaInset(edge: .bottom) {
             VStack(alignment: .leading, spacing: 0) {
                 if !input.completions.isEmpty {
-                    ScrollViewReader { proxy in
-                        ScrollView(.horizontal) {
-                            HStack {
-                                ForEach(input.completions, id: \.self) { completion in
-                                    let text = completion == "\t" ? "tab" : completion
-
-                                    Group {
-                                        if completion == input.selectedCompletion {
-                                            Button(text) {
-                                                input.setCompletion(completion)
-                                            }
-                                            .buttonStyle(.borderedProminent)
-                                        } else {
-                                            Button(text) {
-                                                input.setCompletion(completion)
-                                            }
-                                            .buttonStyle(.bordered)
-                                        }
-                                    }
-                                    .id(completion)
-                                }
-                            }
-                            .padding(8)
-                        }
-                        .onChange(of: input.selectedCompletion) { _, newValue in
-                            if let newValue {
-                                withAnimation {
-                                    proxy.scrollTo(newValue)
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if !input.replBuffer.isEmpty {
-                    VStack(alignment: .leading) {
-                        ForEach(input.replBuffer, id: \.self) { line in
-                            Text(line)
-                        }
-                    }
-                    .padding(.horizontal, 8)
+                    CompletionsView(input: input)
                 }
          
                 TextField(">>>", text: $input.text)
@@ -86,10 +46,7 @@ public struct PythonConsoleView: View {
                     #endif
                     .monospaced()
                     .onSubmit {
-                        let date = Date.now
-                        if let (result, time) = input.submit() {
-                            store.input(result, date: date, time: time)
-                        }
+                        input.submit()
                     }
                     .padding([.horizontal, .bottom], 8)
                     .onKeyPress(.return) {
@@ -128,6 +85,45 @@ public struct PythonConsoleView: View {
             .background(.thinMaterial)
         }
         .fontDesign(.monospaced)
+    }
+}
+
+struct CompletionsView: View {
+    @ObservedObject var input: InputProcessor
+    
+    var body: some View {
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal) {
+                HStack {
+                    ForEach(input.completions, id: \.self) { completion in
+                        let text = completion == "\t" ? "tab" : completion
+
+                        Group {
+                            if completion == input.selectedCompletion {
+                                Button(text) {
+                                    input.setCompletion(completion)
+                                }
+                                .buttonStyle(.borderedProminent)
+                            } else {
+                                Button(text) {
+                                    input.setCompletion(completion)
+                                }
+                                .buttonStyle(.bordered)
+                            }
+                        }
+                        .id(completion)
+                    }
+                }
+                .padding(8)
+            }
+            .onChange(of: input.selectedCompletion) { _, newValue in
+                if let newValue {
+                    withAnimation {
+                        proxy.scrollTo(newValue)
+                    }
+                }
+            }
+        }
     }
 }
 
