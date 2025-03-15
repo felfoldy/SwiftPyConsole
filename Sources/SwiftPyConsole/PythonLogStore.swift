@@ -76,7 +76,7 @@ public final class PythonLogStore: LogStore, IOStream {
     }
 }
 
-extension PythonLogStore: LogDestination {
+extension PythonLogStore: StringLogDestination {
     nonisolated public func log(subsystem: String?, category: String?, level: LogTools.LogLevel, _ message: String, file: String, function: String, line: Int) {
         guard let url = URL(string: file) else { return }
         
