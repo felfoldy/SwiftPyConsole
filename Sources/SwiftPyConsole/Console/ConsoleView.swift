@@ -46,7 +46,7 @@ public struct PythonConsoleView: View {
                     .onSubmit {
                         input.submit()
                     }
-                    .padding([.horizontal, .bottom], 8)
+                    .padding(8)
                     .onKeyPress(.return) {
                         if let completion = input.selectedCompletion,
                            input.completions.count > 1 {
@@ -112,8 +112,9 @@ struct CompletionsView: View {
                         .id(completion)
                     }
                 }
-                .padding(8)
+                .padding([.horizontal, .top], 8)
             }
+            .scrollIndicators(.hidden)
             .onChange(of: input.selectedCompletion) { _, newValue in
                 if let newValue {
                     withAnimation {
