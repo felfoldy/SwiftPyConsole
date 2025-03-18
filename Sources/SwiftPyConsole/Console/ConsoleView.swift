@@ -9,7 +9,7 @@ import DebugTools
 import SwiftUI
 import SwiftPy
 
-@available(macOS 15.0, *)
+@available(macOS 14.0, *)
 public struct PythonConsoleView: View {
     @StateObject private var input = InputProcessor()
     @ObservedObject private var store = SwiftPyConsole.store

@@ -12,7 +12,11 @@ public final class SwiftPyConsole {
     public static let store = PythonLogStore(logFilter: .none)
     public static var isShakePresentationEnabled = false
 
+    static var isInited: Bool = false
+
     public static func initialize(presentByShaking: Bool = true) {
+        if isInited { return }
+
         isShakePresentationEnabled = presentByShaking
         
         Logger.destinations.append(store)
@@ -29,6 +33,8 @@ public final class SwiftPyConsole {
             log.notice("Console initialized. Present it by shaking the device.")
         }
         #endif
+        
+        isInited = true
     }
 }
 
