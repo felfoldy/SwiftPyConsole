@@ -25,7 +25,7 @@ struct PythonOutputLog: SortableLog, Hashable {
 
 public final class PythonLogStore: LogStore, IOStream {
     init() {
-        super.init(logFilter: .none)
+        super.init(logFilter: .count(100))
         // Set log destination.
         Logger.destinations.append(self)
         
@@ -34,9 +34,7 @@ public final class PythonLogStore: LogStore, IOStream {
         
         // Clear console.
         Interpreter.main.bind(#def("clear") {
-            DispatchQueue.main.async {
-                self.logs.removeAll()
-            }
+            self.logs.removeAll()
         })
     }
     
