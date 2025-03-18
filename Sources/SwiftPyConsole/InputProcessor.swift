@@ -20,6 +20,9 @@ final class InputProcessor: ObservableObject {
             .debounce(for: .seconds(0.2), scheduler: RunLoop.main)
             .removeDuplicates()
             .map { text -> [String] in
+                if text.hasSuffix("(") {
+                    return [text + ")"]
+                }
                 let lastComponent = text
                     .lastComponent
                     .debugDescription
@@ -38,6 +41,12 @@ final class InputProcessor: ObservableObject {
     }
     
     func setCompletion(_ completion: String) {
+        if completion.hasSuffix("()") {
+            Interpreter.input(completion)
+            text = ""
+            completions = []
+            return
+        }
         let lastComponent = text.lastComponent
         text = text.dropLast(lastComponent.count) + completion
     }
