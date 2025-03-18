@@ -14,9 +14,7 @@ public struct PythonConsoleView: View {
     @StateObject private var input = InputProcessor()
     @ObservedObject private var store = SwiftPyConsole.store
 
-    public init() {
-        SwiftPyConsole.initialize()
-    }
+    public init() {}
 
     public var body: some View {
         ConsoleView(store: store) { log in

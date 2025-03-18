@@ -1,42 +1,64 @@
 // The Swift Programming Language
 // https://docs.swift.org/swift-book
 
-import DebugTools
 import SwiftUI
+import SwiftPy
+import LogTools
+
+let log = Logger(subsystem: "com.felfoldy.SwiftPyConsole", category: "SwiftPyConsole")
 
 @MainActor
 public final class SwiftPyConsole {
-    public static let store = PythonLogStore()
-    
-    @available(iOS 17.0, *)
-    public static func initialize() {
-        DebugTools.initialize(store: store)
+    public static let store = PythonLogStore(logFilter: .none)
+    public static var isShakePresentationEnabled = false
+
+    public static func initialize(presentByShaking: Bool = true) {
+        isShakePresentationEnabled = presentByShaking
+        
+        Logger.destinations.append(store)
+        Interpreter.output = store
+        store.logFilter = .count(200)
+        
+        // TODO: Implement to in the interpreter?
+        Interpreter.main.bind(#def("clear") {
+            SwiftPyConsole.store.logs.removeAll()
+        })
         
         #if os(iOS)
-        DebugTools.shakePresentedConsole = {
-            let view = GeometryReader { proxy in
-                let isPresented = proxy.size.height > 44
-                
-                Group {
-                    if isPresented {
-                        PythonConsoleView()
-                            .safeAreaInset(edge: .top, spacing: 0) {
-                                Rectangle()
-                                    .fill(.ultraThinMaterial)
-                                    .frame(height: 20)
-                            }
-                    } else {
-                        Text(">>>")
-                            .foregroundStyle(.secondary)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-                            .padding(8)
-                            .background(.thinMaterial)
-                    }
-                }.animation(.default, value: isPresented)
-            }
-            
-            return ConsoleViewController(base: UIHostingController(rootView: view))
+        if isShakePresentationEnabled {
+            log.notice("Console initialized. Present it by shaking the device.")
         }
         #endif
     }
 }
+
+#if canImport(UIKit)
+import UIKit
+
+extension SwiftPyConsole {
+    public static func show() {
+        guard SwiftPyConsole.isShakePresentationEnabled else { return }
+        
+        let view = PythonConsoleView()
+            .safeAreaInset(edge: .top, spacing: 0) {
+                Rectangle()
+                    .fill(.ultraThinMaterial)
+                    .frame(height: 20)
+            }
+
+        let vc = PythonConsoleViewController(base: UIHostingController(rootView: view))
+        
+        UIWindow.keyWindow?.rootViewController?
+            .topMostViewController
+            .present(vc, animated: true)
+    }
+}
+
+extension UIWindow {
+    open override func motionBegan(_ motion: UIEvent.EventSubtype, with event: UIEvent?) {
+        guard motion == .motionShake else { return }
+
+        SwiftPyConsole.show()
+    }
+}
+#endif

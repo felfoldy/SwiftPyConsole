@@ -24,20 +24,6 @@ struct PythonOutputLog: SortableLog, Hashable {
 }
 
 public final class PythonLogStore: LogStore, IOStream {
-    init() {
-        super.init(logFilter: .count(100))
-        // Set log destination.
-        Logger.destinations.append(self)
-        
-        // Set output stream.
-        Interpreter.output = self
-        
-        // Clear console.
-        Interpreter.main.bind(#def("clear") {
-            self.logs.removeAll()
-        })
-    }
-    
     public func input(_ str: String) {
         if let last = logs.last as? PythonInputLog,
            last.executionTime == nil {
