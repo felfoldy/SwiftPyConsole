@@ -58,7 +58,7 @@ class PythonInputLog: SortableLog {
     func highlight(isLight: Bool) -> AttributedString {
         let highlighter: Highlightr? = isLight ? .light : .dark
 
-        if let code = highlighter?.highlight(input) {
+        if let code = highlighter?.highlight(input, as: "python") {
             return AttributedString(code)
         } else {
             return AttributedString(input)
