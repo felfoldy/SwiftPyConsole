@@ -5,14 +5,14 @@ import PackageDescription
 
 let package = Package(
     name: "SwiftPyConsole",
-    platforms: [.macOS(.v14), .iOS(.v17)],
+    platforms: [.macOS(.v15), .iOS(.v17), .visionOS(.v1)],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(name: "SwiftPyConsole",
                  targets: ["SwiftPyConsole"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/felfoldy/SwiftPy", from: "0.2.3"),
+        .package(url: "https://github.com/felfoldy/SwiftPy", from: "0.7.0"),
         .package(url: "https://github.com/felfoldy/DebugTools", from: "0.5.0"),
         .package(url: "https://github.com/raspu/Highlightr", from: "2.2.1"),
     ],
