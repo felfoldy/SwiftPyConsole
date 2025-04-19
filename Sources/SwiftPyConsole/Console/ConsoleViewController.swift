@@ -5,7 +5,7 @@
 //  Created by Tibor Felföldy on 2025-03-18.
 //
 
-#if canImport(UIKit)
+#if canImport(UIKit) && !os(visionOS)
 import UIKit
 
 open class PythonConsoleViewController: UIViewController {
