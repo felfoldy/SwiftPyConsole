@@ -12,7 +12,7 @@ let package = Package(
                  targets: ["SwiftPyConsole"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/felfoldy/SwiftPy", from: "0.7.0"),
+        .package(url: "https://github.com/felfoldy/SwiftPy", from: "0.9.0"),
         .package(url: "https://github.com/felfoldy/DebugTools", from: "0.5.0"),
         .package(url: "https://github.com/raspu/Highlightr", from: "2.2.1"),
     ],
