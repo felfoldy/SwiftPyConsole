@@ -23,10 +23,11 @@ public final class SwiftPyConsole {
         Interpreter.output = store
         store.logFilter = .count(200)
         
-        // TODO: Implement to in the interpreter?
-        Interpreter.main.bind(#def("clear") {
-            SwiftPyConsole.store.logs.removeAll()
-        })
+        Interpreter.main.bind("clear() -> None") { _, _ in
+            PyAPI.returnNone {
+                SwiftPyConsole.store.logs.removeAll()
+            }
+        }
         
         #if os(iOS)
         if isShakePresentationEnabled {
