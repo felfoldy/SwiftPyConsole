@@ -14,13 +14,13 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/felfoldy/SwiftPy", from: "0.9.0"),
         .package(url: "https://github.com/felfoldy/DebugTools", from: "0.5.0"),
-        .package(url: "https://github.com/raspu/Highlightr", from: "2.2.1"),
+        .package(url: "https://github.com/appstefan/HighlightSwift.git", from: "1.1.0")
     ],
     targets: [
         .target(name: "SwiftPyConsole",
                 dependencies: ["SwiftPy",
                                "DebugTools",
-                               "Highlightr"]),
+                               "HighlightSwift"]),
         .testTarget(
             name: "SwiftPyConsoleTests",
             dependencies: ["SwiftPyConsole"]

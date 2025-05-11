@@ -15,22 +15,6 @@
 
 import SwiftUI
 import DebugTools
-import Highlightr
-
-@MainActor
-extension Highlightr {
-    static let light: Highlightr? = {
-        let highlighter = Highlightr()
-        highlighter?.setTheme(to: "atom-one-light")
-        return highlighter
-    }()
-    
-    static let dark: Highlightr? = {
-        let highlighter = Highlightr()
-        highlighter?.setTheme(to: "atom-one-dark")
-        return highlighter
-    }()
-}
 
 @Observable
 @MainActor
@@ -43,7 +27,6 @@ class PythonInputLog: SortableLog {
     let date = Date.now
     var input: String
     var executionTime: UInt64?
-
     init(input: String) {
         self.input = input
     }
@@ -54,38 +37,88 @@ class PythonInputLog: SortableLog {
             .formatted(.units(allowed: [.milliseconds, .seconds],
                               fractionalPart: .show(length: 2, rounded: .up)))
     }
-    
-    func highlight(isLight: Bool) -> AttributedString {
-        let highlighter: Highlightr? = isLight ? .light : .dark
-
-        if let code = highlighter?.highlight(input, as: "python") {
-            return AttributedString(code)
-        } else {
-            return AttributedString(input)
-        }
-    }
 }
+
+import HighlightSwift
 
 struct PythonInputView: View {
     @State var log: PythonInputLog
     @Environment(\.colorScheme) private var colorScheme
+    @State private var highlight = Highlight()
+    
+    @State var attributed: AttributedString?
+    @State var background: Color?
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading) {
-                Text(log.highlight(isLight: colorScheme == .light))
-                
-                // Execution time.
-                if let duration = log.duration {
-                    Label(duration, systemImage: "timer")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                ScrollView(.horizontal) {
+                    Text(attributed ?? AttributedString(log.input))
+                        .textSelection(.enabled)
+                        .monospaced()
+                        .frame(maxWidth: .infinity,
+                               maxHeight: .infinity,
+                               alignment: .topLeading)
+                        .task {
+                            await setHighlight()
+                        }
+                        .padding(4)
+                        .onChange(of: log.input) { _, _ in
+                            Task { await setHighlight() }
+                        }
+                        .onChange(of: colorScheme) { _, _ in
+                            Task { await setHighlight() }
+                        }
+                }
+                .safeAreaInset(edge: .bottom, alignment: .leading) {
+                    // Execution time.
+                    if let duration = log.duration {
+                        Label(duration, systemImage: "timer")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .padding([.horizontal, .bottom], 4)
+                    }
+                }
+                .safeAreaInset(edge: .trailing, alignment: .top) {
+                    Button {
+                        #if canImport(UIKit)
+                        UIPasteboard.general.string = log.input
+                        #else
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(log.input, forType: .string)
+                        #endif
+                    } label: {
+                        Image(systemName: "rectangle.on.rectangle")
+                            .padding(4)
+                            .background {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(.thinMaterial)
+                            }
+                    }
+                    .buttonStyle(.borderless)
+                    .padding(8)
                 }
             }
-            .padding(4)
+            .background(background)
             
             Divider()
         }
+    }
+    
+    func setHighlight() async {
+        let colors = CodeTextColors.theme(.xcode)
+        
+        let result = try? await highlight
+            .request(
+                log.input,
+                mode: .language(.python),
+                colors: colorScheme == .dark ? colors.dark : colors.light
+            )
+        withAnimation {
+            attributed = result?.attributedText
+            background = result?.backgroundColor
+        }
+
     }
 }
 
