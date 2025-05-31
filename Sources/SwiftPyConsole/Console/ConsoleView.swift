@@ -9,6 +9,22 @@ import DebugTools
 import SwiftUI
 import SwiftPy
 
+extension View {
+    func bottom<Content: View>(content: () -> Content) -> some View {
+        #if os(visionOS)
+        ornament(attachmentAnchor: .scene(.bottom)) {
+            content()
+                .glassBackgroundEffect(in: .rect(cornerRadius: 20))
+        }
+        #else
+        safeAreaInset(edge: .bottom) {
+            content()
+                .background(.thinMaterial)
+        }
+        #endif
+    }
+}
+
 @available(macOS 14.0, *)
 public struct PythonConsoleView: View {
     @StateObject private var input = InputProcessor()
@@ -30,7 +46,7 @@ public struct PythonConsoleView: View {
             }
         }
         .textSelection(.enabled)
-        .safeAreaInset(edge: .bottom) {
+        .bottom {
             VStack(alignment: .leading, spacing: 0) {
                 if !input.completions.isEmpty {
                     CompletionsView(input: input)
@@ -38,7 +54,7 @@ public struct PythonConsoleView: View {
          
                 TextField(">>>", text: $input.text)
                     .autocorrectionDisabled()
-                    #if os(iOS)
+                    #if !os(macOS)
                     .textInputAutocapitalization(.never)
                     .keyboardType(.asciiCapable)
                     #endif
@@ -80,9 +96,15 @@ public struct PythonConsoleView: View {
                         return .handled
                     }
             }
-            .background(.thinMaterial)
+            #if os(visionOS)
+            .font(.system(size: 24))
+            .frame(width: 800, alignment: .leading)
+            #endif
         }
         .fontDesign(.monospaced)
+        #if os(visionOS)
+        .padding(.top)
+        #endif
     }
 }
 

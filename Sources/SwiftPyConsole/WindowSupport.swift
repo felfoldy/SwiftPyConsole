@@ -33,7 +33,9 @@ public struct DebugWindowGroup<Content: View>: Scene {
 }
 
 public struct ConsoleWindow: Scene {
-    public init() {}
+    public init() {
+        SwiftPyConsole.initialize()
+    }
     
     public var body: some Scene {
         #if os(macOS)
@@ -45,6 +47,7 @@ public struct ConsoleWindow: Scene {
             PythonConsoleView()
                 .navigationTitle("Console")
                 .navigationBarTitleDisplayMode(.inline)
+                
         }
         #endif
     }
