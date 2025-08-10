@@ -13,7 +13,6 @@ final class InputProcessor: ObservableObject {
     @Published var text: String = ""
     @Published var selectedCompletion: String?
     @Published private(set) var completions: [String] = []
-    @Published private(set) var replBuffer: [String] = []
     
     init() {
         $text
@@ -52,10 +51,11 @@ final class InputProcessor: ObservableObject {
     }
     
     func submit() {
-        Interpreter.input(text)
-
+        let code = text
         text = ""
         completions = []
+
+        Task { await Interpreter.asyncRun(code)}
     }
 }
 

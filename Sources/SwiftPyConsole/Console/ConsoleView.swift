@@ -18,8 +18,14 @@ extension View {
         }
         #else
         safeAreaInset(edge: .bottom) {
-            content()
-                .background(.thinMaterial)
+            if #available(iOS 26.0, *) {
+                content()
+                    .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 16.0))
+                    .padding(8)
+            } else {
+                content()
+                    .background(.thinMaterial)
+            }
         }
         #endif
     }
@@ -47,60 +53,79 @@ public struct PythonConsoleView: View {
         }
         .textSelection(.enabled)
         .bottom {
-            VStack(alignment: .leading, spacing: 0) {
-                if !input.completions.isEmpty {
-                    CompletionsView(input: input)
-                }
-         
-                TextField(">>>", text: $input.text)
-                    .autocorrectionDisabled()
-                    #if !os(macOS)
-                    .textInputAutocapitalization(.never)
-                    .keyboardType(.asciiCapable)
-                    #endif
-                    .monospaced()
-                    .onSubmit {
-                        input.submit()
-                    }
-                    .padding(8)
-                    .onKeyPress(.return) {
-                        if let completion = input.selectedCompletion,
-                           input.completions.count > 1 {
-                            Task {
-                                input.setCompletion(completion)
-                            }
-                            return .handled
-                        }
-                        return .ignored
-                    }
-                    .onKeyPress(.tab) {
-                        if let completion = input.selectedCompletion {
-                            if input.completions.count == 1 {
-                                Task { @MainActor in
-                                    input.setCompletion(completion)
-                                }
-                                return .handled
-                            }
-                            if let i = input.completions.firstIndex(of: completion) {
-                                let next = input.completions[(i + 1) % input.completions.count]
-                                Task { @MainActor in
-                                    input.selectedCompletion = next
-                                }
-                            }
-                            return .handled
-                        }
-
-                        Task {
-                            input.selectedCompletion = input.completions.first
-                        }
-                        return .handled
-                    }
-            }
-            #if os(visionOS)
-            .font(.system(size: 24))
-            .frame(width: 800, alignment: .leading)
-            #endif
+            TextEditor(text: $input.text)
+                .textEditorStyle(.plain)
+                .frame(maxHeight: 48)
+                #if !os(macOS)
+                .textInputAutocapitalization(.never)
+                .keyboardType(.asciiCapable)
+                .autocorrectionDisabled()
+                #endif
+                .monospaced()
+                .padding(8)
         }
+        .toolbar {
+            ToolbarItemGroup(placement: .bottomBar) {
+                ScrollViewReader { proxy in
+                    ScrollView(.horizontal) {
+                        HStack {
+                            ForEach(input.completions, id: \.self) { completion in
+                                let text = completion == "\t" ? "tab" : completion
+                                
+                                Group {
+                                    if completion == input.selectedCompletion {
+                                        Button(text) {
+                                            input.setCompletion(completion)
+                                        }
+                                        .buttonStyle(.borderedProminent)
+                                    } else {
+                                        Button(text) {
+                                            input.setCompletion(completion)
+                                        }
+                                        .buttonStyle(.bordered)
+                                    }
+                                }
+                                .id(completion)
+                            }
+                        }
+                    }
+                }
+            }
+            
+            ToolbarItemGroup(placement: .bottomBar) {
+                Spacer()
+                
+                Button("", systemImage: "play") {
+                    input.submit()
+                }
+            }
+        }
+        .onKeyPress(.tab) {
+            if let completion = input.selectedCompletion {
+                if input.completions.count == 1 {
+                    Task { @MainActor in
+                        input.setCompletion(completion)
+                    }
+                    return .handled
+                }
+                if let i = input.completions.firstIndex(of: completion) {
+                    let next = input.completions[(i + 1) % input.completions.count]
+                    Task { @MainActor in
+                        input.selectedCompletion = next
+                    }
+                }
+                return .handled
+            }
+            
+            Task {
+                input.selectedCompletion = input.completions.first
+            }
+            return .handled
+        }
+        #if os(visionOS)
+        .font(.system(size: 24))
+        .frame(width: 800, alignment: .leading)
+        #endif
         .fontDesign(.monospaced)
         #if os(visionOS)
         .padding(.top)
