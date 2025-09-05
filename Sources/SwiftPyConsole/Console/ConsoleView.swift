@@ -59,26 +59,20 @@ public struct PythonConsoleView: View {
         }
         .completionsBar(for: input)
         .onKeyPress(.tab) {
-            if let completion = input.selectedCompletion {
-                if input.completions.count == 1 {
-                    Task { @MainActor in
-                        input.setCompletion(completion)
-                    }
-                    return .handled
+            if input.completions.count == 1 {
+                Task { @MainActor in
+                    input.setCompletion(input.completions[0])
                 }
-                if let i = input.completions.firstIndex(of: completion) {
-                    let next = input.completions[(i + 1) % input.completions.count]
-                    Task { @MainActor in
-                        input.selectedCompletion = next
-                    }
-                }
-                return .handled
-            }
-            
-            Task {
-                input.selectedCompletion = input.completions.first
             }
             return .handled
+        }
+        .onKeyPress(KeyEquivalent.return) {
+            if input.returnPressed() {
+                input.submit()
+                return .handled
+            }
+
+            return .ignored
         }
         #if os(visionOS)
         .font(.system(size: 24))
@@ -88,46 +82,6 @@ public struct PythonConsoleView: View {
         #if os(visionOS)
         .padding(.top)
         #endif
-    }
-}
-
-struct CompletionsView: View {
-    @ObservedObject var input: InputProcessor
-    
-    var body: some View {
-        ScrollViewReader { proxy in
-            ScrollView(.horizontal) {
-                HStack {
-                    ForEach(input.completions, id: \.self) { completion in
-                        let text = completion == "\t" ? "tab" : completion
-
-                        Group {
-                            if completion == input.selectedCompletion {
-                                Button(text) {
-                                    input.setCompletion(completion)
-                                }
-                                .buttonStyle(.borderedProminent)
-                            } else {
-                                Button(text) {
-                                    input.setCompletion(completion)
-                                }
-                                .buttonStyle(.bordered)
-                            }
-                        }
-                        .id(completion)
-                    }
-                }
-                .padding([.horizontal, .top], 8)
-            }
-            .scrollIndicators(.hidden)
-            .onChange(of: input.selectedCompletion) { _, newValue in
-                if let newValue {
-                    withAnimation {
-                        proxy.scrollTo(newValue)
-                    }
-                }
-            }
-        }
     }
 }
 

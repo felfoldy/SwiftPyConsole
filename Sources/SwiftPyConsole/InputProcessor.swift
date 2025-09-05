@@ -12,9 +12,8 @@ import HighlightSwift
 @MainActor
 final class InputProcessor: ObservableObject {
     @Published var text: String = ""
-    @Published var selectedCompletion: String?
     @Published private(set) var completions: [String] = []
-    
+
     init() {
         $text
             .debounce(for: .seconds(0.2), scheduler: RunLoop.main)
@@ -22,7 +21,7 @@ final class InputProcessor: ObservableObject {
             .map { text -> [String] in
                 let components = text.components
 
-                if components.count == 1, text.hasSuffix("(") {
+                if components.count == 2, text.hasSuffix("(") {
                     return [text + ")"]
                 }
 
@@ -34,14 +33,8 @@ final class InputProcessor: ObservableObject {
                 return Interpreter.complete(lastComponent)
             }
             .assign(to: &$completions)
-        
-        $completions
-            .map {
-                $0.count == 1 ? $0.first : nil
-            }
-            .assign(to: &$selectedCompletion)
     }
-    
+
     func setCompletion(_ completion: String) {
         if completion.hasSuffix("()") {
             Interpreter.input(completion)
@@ -54,11 +47,36 @@ final class InputProcessor: ObservableObject {
     }
     
     func submit() {
-        let code = text
-        text = ""
-        completions = []
+        Task {
+            let code = text
+            text = ""
+            completions = []
 
-        Task { await Interpreter.asyncRun(code)}
+            await Interpreter.asyncRun(code)
+        }
+    }
+
+    func returnPressed() -> Bool {
+        guard let last = text.last else {
+            return false
+        }
+
+        let lines = text.components(separatedBy: .newlines)
+
+        if lines.count == 1 {
+            // These special characters breaks it to new lines.
+            if ":({[".contains(last) || lines[0] == "@" {
+                return false
+            }
+
+            return true
+        }
+
+        if last == "\n" {
+            return true
+        }
+
+        return false
     }
 }
 

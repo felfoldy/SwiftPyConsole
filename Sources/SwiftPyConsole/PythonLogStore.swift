@@ -25,12 +25,7 @@ struct PythonOutputLog: SortableLog, Hashable {
 
 public final class PythonLogStore: LogStore, IOStream {
     public func input(_ str: String) {
-        if let last = logs.last as? PythonInputLog,
-           last.executionTime == nil {
-            last.input += "\n" + str
-        } else {
-            logs.append(PythonInputLog(input: str))
-        }
+        logs.append(PythonInputLog(input: str))
     }
     
     public func executionTime(_ time: UInt64) {

@@ -20,7 +20,7 @@ struct CompletionsBarModifier: ViewModifier {
                                 let text = completion == "\t" ? "tab" : completion
                                 
                                 Group {
-                                    if completion == input.selectedCompletion {
+                                    if input.completions.count == 1 {
                                         Button(text) {
                                             input.setCompletion(completion)
                                         }
