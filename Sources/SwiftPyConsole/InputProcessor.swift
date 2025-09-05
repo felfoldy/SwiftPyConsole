@@ -37,9 +37,8 @@ final class InputProcessor: ObservableObject {
 
     func setCompletion(_ completion: String) {
         if completion.hasSuffix("()") {
-            Interpreter.input(completion)
-            text = ""
-            completions = []
+            text = completion
+            submit()
             return
         }
         let lastComponent = text.lastComponent
@@ -52,7 +51,7 @@ final class InputProcessor: ObservableObject {
             text = ""
             completions = []
 
-            await Interpreter.asyncRun(code)
+            await Interpreter.asyncRun(code, filename: "<stdin>", mode: .single)
         }
     }
 
