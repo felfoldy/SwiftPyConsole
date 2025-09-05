@@ -53,22 +53,13 @@ struct PythonInputView: View {
         VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading) {
                 ScrollView(.horizontal) {
-                    Text(attributed ?? AttributedString(log.input))
+                    CodeText(log.input)
+                        .codeTextColors(.theme(.xcode))
+                        .highlightLanguage(.python)
                         .textSelection(.enabled)
-                        .monospaced()
                         .frame(maxWidth: .infinity,
                                maxHeight: .infinity,
                                alignment: .topLeading)
-                        .task {
-                            await setHighlight()
-                        }
-                        .padding(4)
-                        .onChange(of: log.input) { _, _ in
-                            Task { await setHighlight() }
-                        }
-                        .onChange(of: colorScheme) { _, _ in
-                            Task { await setHighlight() }
-                        }
                 }
                 .safeAreaInset(edge: .bottom, alignment: .leading) {
                     // Execution time.
@@ -90,12 +81,8 @@ struct PythonInputView: View {
                     } label: {
                         Image(systemName: "rectangle.on.rectangle")
                             .padding(4)
-                            .background {
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(.thinMaterial)
-                            }
                     }
-                    .buttonStyle(.borderless)
+                    .buttonStyle(.glass)
                     .padding(8)
                 }
             }
@@ -104,29 +91,13 @@ struct PythonInputView: View {
             Divider()
         }
     }
-    
-    func setHighlight() async {
-        let colors = CodeTextColors.theme(.xcode)
-        
-        let result = try? await highlight
-            .request(
-                log.input,
-                mode: .language(.python),
-                colors: colorScheme == .dark ? colors.dark : colors.light
-            )
-        withAnimation {
-            attributed = result?.attributedText
-            background = result?.backgroundColor
-        }
-
-    }
 }
 
 #Preview {
     ScrollView {
         PythonInputView(log: PythonInputLog(input: """
     class SomeClass:
-        def some_very_long_function_name_what_must_be_broken(count: int) -> str:
+        def some_very_long_function_name(count: int) -> str:
             for i in range(count):
                 print(f"row {i+1}")
             

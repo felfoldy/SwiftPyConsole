@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftPy
+import HighlightSwift
 
 @MainActor
 final class InputProcessor: ObservableObject {
@@ -19,11 +20,13 @@ final class InputProcessor: ObservableObject {
             .debounce(for: .seconds(0.2), scheduler: RunLoop.main)
             .removeDuplicates()
             .map { text -> [String] in
-                if text.hasSuffix("(") {
+                let components = text.components
+
+                if components.count == 1, text.hasSuffix("(") {
                     return [text + ")"]
                 }
-                let lastComponent = text
-                    .lastComponent
+
+                let lastComponent = (components.last ?? "")
                     .debugDescription
                     .trimmingCharacters(
                         in: CharacterSet(["\""])
@@ -60,6 +63,12 @@ final class InputProcessor: ObservableObject {
 }
 
 extension String {
+    var components: [String] {
+        let set = CharacterSet.whitespacesAndNewlines
+            .union(CharacterSet(["(", "["]))
+        return components(separatedBy: set)
+    }
+    
     var lastComponent: String {
         let set = CharacterSet.whitespacesAndNewlines
             .union(CharacterSet(["(", "["]))

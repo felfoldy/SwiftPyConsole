@@ -10,7 +10,7 @@ import SwiftUI
 import SwiftPy
 
 extension View {
-    func bottom<Content: View>(content: () -> Content) -> some View {
+    func bottom<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         #if os(visionOS)
         ornament(attachmentAnchor: .scene(.bottom)) {
             content()
@@ -18,14 +18,10 @@ extension View {
         }
         #else
         safeAreaInset(edge: .bottom) {
-            if #available(iOS 26.0, *) {
-                content()
-                    .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 16.0))
-                    .padding(8)
-            } else {
-                content()
-                    .background(.thinMaterial)
-            }
+            content()
+                .padding(8)
+                .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 16.0))
+                .padding(.horizontal, 8)
         }
         #endif
     }
@@ -35,8 +31,6 @@ extension View {
 public struct PythonConsoleView: View {
     @StateObject private var input = InputProcessor()
     @ObservedObject private var store = SwiftPyConsole.store
-
-    public init() {}
 
     public var body: some View {
         ConsoleView(store: store) { log in
@@ -56,50 +50,14 @@ public struct PythonConsoleView: View {
             TextEditor(text: $input.text)
                 .textEditorStyle(.plain)
                 .frame(maxHeight: 48)
+                .autocorrectionDisabled()
                 #if !os(macOS)
                 .textInputAutocapitalization(.never)
                 .keyboardType(.asciiCapable)
-                .autocorrectionDisabled()
                 #endif
                 .monospaced()
-                .padding(8)
         }
-        .toolbar {
-            ToolbarItemGroup(placement: .bottomBar) {
-                ScrollViewReader { proxy in
-                    ScrollView(.horizontal) {
-                        HStack {
-                            ForEach(input.completions, id: \.self) { completion in
-                                let text = completion == "\t" ? "tab" : completion
-                                
-                                Group {
-                                    if completion == input.selectedCompletion {
-                                        Button(text) {
-                                            input.setCompletion(completion)
-                                        }
-                                        .buttonStyle(.borderedProminent)
-                                    } else {
-                                        Button(text) {
-                                            input.setCompletion(completion)
-                                        }
-                                        .buttonStyle(.bordered)
-                                    }
-                                }
-                                .id(completion)
-                            }
-                        }
-                    }
-                }
-            }
-            
-            ToolbarItemGroup(placement: .bottomBar) {
-                Spacer()
-                
-                Button("", systemImage: "play") {
-                    input.submit()
-                }
-            }
-        }
+        .completionsBar(for: input)
         .onKeyPress(.tab) {
             if let completion = input.selectedCompletion {
                 if input.completions.count == 1 {
@@ -174,7 +132,5 @@ struct CompletionsView: View {
 }
 
 #Preview {
-    if #available(macOS 15.0, *) {
-        PythonConsoleView()
-    }
+    PythonConsoleView()
 }

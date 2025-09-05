@@ -14,25 +14,33 @@ public final class SwiftPyConsole {
 
     static var isInited: Bool = false
 
-    public static func initialize(presentByShaking: Bool = true) {
+    public static func initialize(presentByShaking: Bool = false) {
         if isInited { return }
 
         isShakePresentationEnabled = presentByShaking
-        
+
         Logger.destinations.append(store)
         Interpreter.output = store
         store.logFilter = .count(200)
-        
+
         Interpreter.main.bind("clear() -> None") { _, _ in
             PyAPI.returnNone {
                 SwiftPyConsole.store.logs.removeAll()
             }
         }
-        
+
         #if os(iOS)
         if isShakePresentationEnabled {
             log.notice("Console initialized. Present it by shaking the device.")
         }
+        #endif
+
+        #if os(macOS)
+        // Remove weird substitution on mac.
+        UserDefaults.standard.set(false, forKey: "NSAutomaticQuoteSubstitutionEnabled")
+        UserDefaults.standard.set(false, forKey: "NSAutomaticDashSubstitutionEnabled")
+        UserDefaults.standard.set(false, forKey: "NSAutomaticTextReplacementEnabled")
+        UserDefaults.standard.set(false, forKey: "NSAutomaticSpellingCorrectionEnabled")
         #endif
         
         isInited = true
