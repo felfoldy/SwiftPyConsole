@@ -11,7 +11,7 @@ import SwiftUI
 import LogTools
 import OSLog
 
-struct PythonOutputLog: SortableLog, Hashable {
+struct PythonOutputLog: SortableLog, Hashable, LogViewProvider {
     let id = UUID().uuidString
     let date = Date()
     var message: String
@@ -20,6 +20,15 @@ struct PythonOutputLog: SortableLog, Hashable {
     init(message: String, tint: Color) {
         self.message = message
         self.tint = tint
+    }
+    
+    var view: AnyView {
+        AnyView(
+            LogContainerView(tint: tint) {
+                Text(message)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        )
     }
 }
 

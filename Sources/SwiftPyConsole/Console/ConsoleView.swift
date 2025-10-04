@@ -27,22 +27,14 @@ extension View {
     }
 }
 
-@available(macOS 14.0, *)
 public struct PythonConsoleView: View {
     @StateObject private var input = InputProcessor()
     @ObservedObject private var store = SwiftPyConsole.store
 
     public var body: some View {
         ConsoleView(store: store) { log in
-            if let outLog = log as? PythonOutputLog {
-                LogContainerView(tint: outLog.tint) {
-                    Text(outLog.message)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            }
-            
-            if let inputLog = log as? PythonInputLog {
-                PythonInputView(log: inputLog)
+            if let viewableLog = log as? LogViewProvider {
+                viewableLog.view
             }
         }
         .textSelection(.enabled)
