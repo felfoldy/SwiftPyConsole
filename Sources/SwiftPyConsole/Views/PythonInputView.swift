@@ -59,6 +59,7 @@ struct PythonInputView: View {
                         .frame(maxWidth: .infinity,
                                maxHeight: .infinity,
                                alignment: .topLeading)
+                        .padding(4)
                 }
                 .safeAreaInset(edge: .bottom, alignment: .leading) {
                     // Execution time.
