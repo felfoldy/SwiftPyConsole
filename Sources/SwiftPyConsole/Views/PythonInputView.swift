@@ -15,15 +15,11 @@
 
 import SwiftUI
 import DebugTools
-
-@MainActor
-public protocol LogViewProvider {
-    var view: AnyView { get }
-}
+import HighlightSwift
 
 @Observable
 @MainActor
-class PythonInputLog: SortableLog, LogViewProvider {
+class PythonInputLog: SortableLog {
     nonisolated static func == (lhs: PythonInputLog, rhs: PythonInputLog) -> Bool {
         lhs.id == rhs.id
     }
@@ -42,13 +38,7 @@ class PythonInputLog: SortableLog, LogViewProvider {
             .formatted(.units(allowed: [.milliseconds, .seconds],
                               fractionalPart: .show(length: 2, rounded: .up)))
     }
-    
-    var view: AnyView {
-        AnyView(PythonInputView(log: self))
-    }
 }
-
-import HighlightSwift
 
 struct PythonInputView: View {
     @State var log: PythonInputLog

@@ -11,7 +11,7 @@ let package = Package(
                  targets: ["SwiftPyConsole"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/felfoldy/SwiftPy", from: "0.9.0"),
+        .package(url: "https://github.com/felfoldy/SwiftPy", from: "0.13.4"),
         .package(url: "https://github.com/felfoldy/DebugTools", from: "0.5.0"),
         .package(url: "https://github.com/appstefan/HighlightSwift.git", from: "1.1.0")
     ],

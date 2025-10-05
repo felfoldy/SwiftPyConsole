@@ -33,8 +33,19 @@ public struct PythonConsoleView: View {
 
     public var body: some View {
         ConsoleView(store: store) { log in
-            if let viewableLog = log as? LogViewProvider {
-                viewableLog.view
+            if let inputLog = log as? PythonInputLog {
+                PythonInputView(log: inputLog)
+            }
+
+            if let outputLog = log as? PythonOutputLog {
+                LogContainerView(tint: outputLog.tint) {
+                    Text(outputLog.message)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+
+            if let viewableLog = log as? ViewLog {
+                viewableLog.representation.view
             }
         }
         .textSelection(.enabled)
