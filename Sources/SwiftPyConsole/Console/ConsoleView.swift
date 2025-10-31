@@ -8,6 +8,9 @@
 import DebugTools
 import SwiftUI
 import SwiftPy
+#if canImport(QuickLook)
+import QuickLook
+#endif
 
 extension View {
     func bottom<Content: View>(@ViewBuilder content: () -> Content) -> some View {
@@ -30,6 +33,8 @@ extension View {
 public struct PythonConsoleView: View {
     @StateObject private var input = InputProcessor()
     @ObservedObject private var store = SwiftPyConsole.store
+
+    @State private var console = Console.shared
 
     public var body: some View {
         ConsoleView(store: store) { log in
@@ -80,6 +85,8 @@ public struct PythonConsoleView: View {
         #if os(visionOS)
         .font(.system(size: 24))
         .frame(width: 800, alignment: .leading)
+        #else
+        .quickLookPreview($console.previewURL)
         #endif
         .fontDesign(.monospaced)
         #if os(visionOS)
