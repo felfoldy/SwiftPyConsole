@@ -82,6 +82,12 @@ public struct PythonConsoleView: View {
 
             return .ignored
         }
+        .onAppear {
+            console._isPresented = true
+        }
+        .onDisappear {
+            console._isPresented = false
+        }
         #if os(visionOS)
         .font(.system(size: 24))
         .frame(width: 800, alignment: .leading)

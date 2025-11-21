@@ -10,14 +10,15 @@ let log = Logger(subsystem: "com.felfoldy.SwiftPyConsole", category: "SwiftPyCon
 @MainActor
 public final class SwiftPyConsole {
     public static let store = PythonLogStore(logFilter: .none)
-    public static var isShakePresentationEnabled = false
 
     static var isInited: Bool = false
 
     public static func initialize(presentByShaking: Bool = false) {
         if isInited { return }
 
-        isShakePresentationEnabled = presentByShaking
+        if !EnvironmentValues().supportsMultipleWindows {
+            Console.shared.isShakePresentationEnabled = presentByShaking
+        }
 
         Logger.destinations.append(store)
         Interpreter.output = store
@@ -28,12 +29,6 @@ public final class SwiftPyConsole {
                 SwiftPyConsole.store.logs.removeAll()
             }
         }
-
-        #if os(iOS)
-        if isShakePresentationEnabled {
-            log.notice("Console initialized. Present it by shaking the device.")
-        }
-        #endif
 
         #if os(macOS)
         // Remove weird substitution on mac.
@@ -50,30 +45,12 @@ public final class SwiftPyConsole {
 #if canImport(UIKit) && !os(visionOS)
 import UIKit
 
-extension SwiftPyConsole {
-    public static func show() {
-        guard SwiftPyConsole.isShakePresentationEnabled else { return }
-        
-        let view = PythonConsoleView()
-            .safeAreaInset(edge: .top, spacing: 0) {
-                Rectangle()
-                    .fill(.ultraThinMaterial)
-                    .frame(height: 20)
-            }
-
-        let vc = PythonConsoleViewController(base: UIHostingController(rootView: view))
-        
-        UIWindow.keyWindow?.rootViewController?
-            .topMostViewController
-            .present(vc, animated: true)
-    }
-}
-
 extension UIWindow {
     open override func motionBegan(_ motion: UIEvent.EventSubtype, with event: UIEvent?) {
+        super.motionBegan(motion, with: event)
         guard motion == .motionShake else { return }
-
-        SwiftPyConsole.show()
+        guard Console.shared.isShakePresentationEnabled else { return }
+        try? Console.shared.show()
     }
 }
 #endif
