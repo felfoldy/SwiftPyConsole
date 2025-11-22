@@ -33,8 +33,8 @@ public struct DebugWindowGroup<Content: View>: Scene {
 }
 
 public struct ConsoleWindow: Scene {
-    public init() {
-        SwiftPyConsole.initialize()
+    public init(presentByShake: Bool = false) {
+        SwiftPyConsole.initialize(presentByShaking: presentByShake)
     }
     
     public var body: some Scene {
