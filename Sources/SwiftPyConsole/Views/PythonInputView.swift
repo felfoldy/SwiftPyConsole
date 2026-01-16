@@ -82,7 +82,9 @@ struct PythonInputView: View {
                         Image(systemName: "rectangle.on.rectangle")
                             .padding(4)
                     }
+                    #if !os(visionOS)
                     .buttonStyle(.glass)
+                    #endif
                     .padding(8)
                 }
             }

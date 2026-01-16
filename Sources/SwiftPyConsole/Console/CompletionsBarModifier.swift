@@ -24,12 +24,16 @@ struct CompletionsBarModifier: ViewModifier {
                                         Button(text) {
                                             input.setCompletion(completion)
                                         }
+                                        #if !os(visionOS)
                                         .buttonStyle(.glassProminent)
+                                        #endif
                                     } else {
                                         Button(text) {
                                             input.setCompletion(completion)
                                         }
+                                        #if !os(visionOS)
                                         .buttonStyle(.glass)
+                                        #endif
                                     }
                                 }
                                 .id(completion)
@@ -44,8 +48,10 @@ struct CompletionsBarModifier: ViewModifier {
                 } label: {
                     Image(systemName: "play")
                 }
+                #if !os(visionOS)
                 .buttonStyle(.glassProminent)
                 .padding(8)
+                #endif
             }
             .frame(minHeight: 48)
         }

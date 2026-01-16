@@ -18,6 +18,7 @@ extension View {
         ornament(attachmentAnchor: .scene(.bottom)) {
             content()
                 .glassBackgroundEffect(in: .rect(cornerRadius: 20))
+                .frame(width: 300, height: 60)
         }
         #else
         safeAreaInset(edge: .bottom) {
