@@ -35,6 +35,10 @@ final class Console {
         previewURL = url
     }
     
+    func connect(target: String) {
+        SwiftPyConsole.remote = RemoteConsoleConnection(target: target)
+    }
+
     func show() throws {
         if isPresented {
             throw PythonError.AssertionError("Console is already presented.")

@@ -10,6 +10,7 @@ let log = Logger(subsystem: "com.felfoldy.SwiftPyConsole", category: "SwiftPyCon
 @MainActor
 public final class SwiftPyConsole {
     public static let store = PythonLogStore(logFilter: .none)
+    static var remote: RemoteConsoleConnection?
 
     static var isInited: Bool = false
 

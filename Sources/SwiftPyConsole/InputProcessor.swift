@@ -51,7 +51,11 @@ final class InputProcessor: ObservableObject {
             text = ""
             completions = []
 
-            await Interpreter.asyncRun(code, filename: "<stdin>", mode: .single)
+            if let remote = SwiftPyConsole.remote {
+                remote.run(code)
+            } else {
+                await Interpreter.asyncRun(code, filename: "<stdin>", mode: .single)
+            }
         }
     }
 
