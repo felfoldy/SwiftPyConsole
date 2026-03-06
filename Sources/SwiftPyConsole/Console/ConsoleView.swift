@@ -44,7 +44,7 @@ public struct PythonConsoleView: View {
             }
 
             if let outputLog = log as? PythonOutputLog {
-                LogContainerView(tint: outputLog.tint) {
+                SwiftPy.LogContainerView(tint: outputLog.tint) {
                     Text(outputLog.message)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
